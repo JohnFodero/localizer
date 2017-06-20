@@ -1,5 +1,8 @@
 # wifi control library
 
+import os
+if os.geteuid() != 0:
+    exit("You need to have root privileges to run this script.")
 from wifi import Cell
 from decimal import Decimal
 
