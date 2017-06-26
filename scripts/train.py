@@ -4,31 +4,9 @@ import numpy as np
 import csv
 import re
 from wifi_listener import *
+from tools import *
 import h5py
 import os
-def load_data(file_name):
-    '''
-    Loads csv data from files
-    Input: file_name: name of .csv file to load
-    Output: (numpy array) raw_X: (n, length of profile, 2)
-            (numpy array) raw_y: (n, 2) location
-    '''
-    raw_X = []
-    location = int(file_name[-1])
-    with open(file_name, 'r') as f:
-        reader = csv.reader(f)
-        for row in reader:
-            cells = []
-            missed_cells = []
-            x_loc, y_loc, img_loc = row[:3]
-            for net in wifi.profile_cells(row[3:]):
-                data = net.split(' ')
-                cells.append([data[1], data[2]])
-            raw_X.append(cells)
-    raw_X = np.array(raw_X)
-    raw_y = np.zeros((raw_X.shape[0], 2))
-    raw_y[:, location] = 1
-    return raw_X, raw_y
 
 def get_xy(model, wifi_obj):
     x = 0.0
@@ -42,20 +20,14 @@ def get_xy(model, wifi_obj):
 
 if __name__ == '__main__':
     wifi = wifi_listener('wlp3s0')
-    wifi.make_profile(num_cells=10)
+    wifi.make_profile(num_cells=20)
     profile_length = len(wifi.profile)
     print('profile length: ', profile_length)
-    X = None
-    y = None
-    for file_name in os.listdir('../datasets'):
-        X_temp, y_temp = load_data('../datasets/' + file_name)
-        if X is None:
-            X = np.array(X_temp)
-            y = np.array(y_temp)
-        else:
-            X = np.concatenate((X, X_temp))
-            y = np.concatenate((y, y_temp))
-        print('{} loaded'.format(file_name))
+    
+    # --- load data ---
+    X, y = load_data_from_folder('../datasets')
+    print('X: ', X.shape)
+    print('Y: ', y.shape)
 
      # randomize the array
 #    we may not want to do this...
