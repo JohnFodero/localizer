@@ -50,6 +50,6 @@ class wifi_scanner():
                         profiled_cells.append([rssi, quality])
                         break
                 else:
-                    profiled_cells.append([DEFAULT_RSSI, DEFAULT_QUALITY])
+                     profiled_cells.append([DEFAULT_RSSI, DEFAULT_QUALITY])
             return np.array(profiled_cells)
 

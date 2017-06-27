@@ -5,11 +5,13 @@ from models import *
 import numpy as np
 import h5py
 from keras.models import load_model
+from time import sleep
+
 wifi = wifi_scanner('wlp3s0')
 
 lab_loc = localizer(wifi)
 lab_loc.load_profile('lab_profile')
-
+print(len(lab_loc.profile))
 print(lab_loc)
 
 X, y = load_data_from_folder('../datasets', lab_loc.profile)
@@ -27,14 +29,20 @@ print(shape_str.format('TRAIN', str(X_train.shape), str(y_train.shape)))
 print(shape_str.format('TEST', str(X_test.shape), str(y_test.shape)))
 print(shape_str.format('TOTAL', str(X.shape), str(y.shape)))
 
-
-model = WifiOnly(input_shape=X.shape[1:], output_shape=2).model
+model = load_model('../models/lab_wifi_simple.hdf5')
 model.summary()
-model.fit(X_train, y_train, epochs=100, batch_size=32, verbose=2)
-model.save('../models/lab_wifi_simple.hdf5')
 
-print(model.evaluate(X_train, y_train))
-print(model.evaluate(X_test, y_test))
+print(model.evaluate(X_train, y_train, verbose=0))
+print(model.evaluate(X_test, y_test, verbose=0))
 pred = model.predict(np.expand_dims(X[10], axis=0))
 print(pred)
 print(y[10])
+
+while True:
+    cells = np.expand_dims(lab_loc.wifi.get_wifi_cells(lab_loc.profile).flatten(), axis=0)
+    print('Cells')
+    print(cells)
+    print(cells.shape)
+    print('Predict')
+    print(model.predict(cells))
+    sleep(2)
