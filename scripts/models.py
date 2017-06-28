@@ -1,4 +1,4 @@
-from keras.layers import Dense, Dropout, Flatten, Activation
+from keras.layers import *
 from keras.models import Sequential, load_model
 
 class BaseModel(object):
@@ -29,5 +29,31 @@ class WifiOnly(BaseModel):
         model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
         return model
         
+class WifiOnlyXY(BaseModel):
+    '''
+    A testing model to characterize wifi-only localization
+    '''
 
+    def build_model(self):
+        model = Sequential()
+        model.add(Dense(256, input_shape=self.input_shape))
+        model.add(Activation('relu'))
+#        model.add(Dropout(0.5))
+        model.add(Dense(64))
+        model.add(Activation('relu'))
+        model.add(Dense(32))
+        model.add(Activation('relu'))
+        model.add(Dense(self.output_shape))
+        model.add(Activation('linear'))
+
+        model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+        return model
+ 
+class LSTM(BaseModel):
+    '''
+    LSTM Model
+    '''
+    def build_model(self):
+        model = Sequential()
+        return model
 

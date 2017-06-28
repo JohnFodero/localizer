@@ -63,10 +63,3 @@ class localizer():
             self.profile = profile
         else:
             print('{}: Is not a valid profile name.'.format(profile_name))
-
-    def train_model(self):
-        pass
-
-    def predict_xy(self):
-        pass
-

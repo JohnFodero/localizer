@@ -38,9 +38,10 @@ class wifi_scanner():
         cells = sorted([cell for cell in cells], 
                 key=lambda x: int(x.signal), reverse=True)
         cells = [self.make_cell_line(cell) for cell in cells]
-
+        cells = np.array(cells).flatten()
         if profile is None:
-            return np.array(cells)
+            #return np.array(cells)
+            return cells
         else:
             profiled_cells = []
             for p_cell in profile:
@@ -51,5 +52,5 @@ class wifi_scanner():
                         break
                 else:
                      profiled_cells.append([DEFAULT_RSSI, DEFAULT_QUALITY])
-            return np.array(profiled_cells)
+            return np.array(profiled_cells).flatten()
 

@@ -5,26 +5,44 @@ import datetime
 import numpy as np
 import os
 
-def capture_data(localizer, num_samples=1000, delay_sec=1):
-    x = 0.
-    y = 1.
-    
+def start_capture(file_name=None, file_path=None):
+    if file_path is None:
+        file_path = '../datasets/'
+    if file_name is None:
+        file_name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
+    f = open(file_path + file_name, 'wt')
+    return f, csv.writer(f, delimiter=',')
+
+def write_line(writer=None, localizer=None, x=0.0, y=0.0, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1='na', img2='na'):
+    if localizer is not None and writer is not None:
+        cells = localizer.wifi.get_wifi_cells()
+        writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *cells])
+
+def stop_capture(file_obj):
+    file_obj.close()
+
+
+def capture(localizer, num_samples=1000, delay_sec=1):
+    '''
+    All-in-one method for capturing
+    '''
     file_path = '../datasets/'
     file_name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M') + 'loc' + str(x) + str(y)
-    
+    x = 0.0
+    y = 0.0
     mag_x = 0.
     mag_y = 0.
     mag_z = 0.
-    img = 'none'
+    img1 = 'none'
+    img2 = 'none'
     with open(file_path + file_name, 'wt') as f:
         wr = csv.writer(f, delimiter=',')
         for i in range(num_samples):
-            master_list =[]
-            # !!! use np.flatten instead !!!
-            cells = localizer.wifi.get_wifi_cells().flatten()
-            wr.writerow([x, y, mag_x, mag_y, mag_z, img, *cells])
+            cells = localizer.wifi.get_wifi_cells()
+            wr.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *cells])
             print('sample ', i, end='\r')
             sleep(delay_sec)
+
 
 def load_data_from_file(file_path, profile=None):
     X_data = None
@@ -36,11 +54,11 @@ def load_data_from_file(file_path, profile=None):
                 X = float(row[0])
                 y = float(row[1])
                 mag_x, mag_y, mag_z = float(row[2]), float(row[3]), float(row[4])
-                img = row[5]
+                img1, img2 = row[5], row[6]
                 cells = []
                 count = 0
                 for addr in profile:
-                    for cell in row[6:]:
+                    for cell in row[7:]:
                         mac, rssi, quality = cell.split(' ')
                         if addr == mac:
                             cells.append(rssi)

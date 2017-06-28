@@ -28,10 +28,10 @@ print(shape_str.format('TEST', str(X_test.shape), str(y_test.shape)))
 print(shape_str.format('TOTAL', str(X.shape), str(y.shape)))
 
 
-model = WifiOnly(input_shape=X.shape[1:], output_shape=2).model
+model = WifiOnlyXY(input_shape=X.shape[1:], output_shape=2).model
 model.summary()
 model.fit(X_train, y_train, epochs=100, batch_size=32, verbose=2)
-model.save('../models/lab_wifi_simple.hdf5')
+model.save('../models/lab_xy.hdf5')
 
 print(model.evaluate(X_train, y_train))
 print(model.evaluate(X_test, y_test))
