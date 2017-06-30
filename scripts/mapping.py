@@ -1,7 +1,8 @@
 import cv2
 from math import floor
+import numpy as np
 
-# Map origin is 
+# Map origin is top left corner
 
 DISPLAY_SCALE = 0.5
 KOBUKI_RADIUS_GLOBAL = 0.35 # in meters
@@ -24,8 +25,9 @@ class mapping():
 		self.map_height_display = floor(self.map_height_pixel*DISPLAY_SCALE)
 
 		# read obstacle bitmap
-		self.bitmap = cv2.imread(path_to_bitmap, 0)
-		
+		self.bitmap = cv2.imread(path_to_bitmap, 1)
+		cv2.imshow('bmp', self.bitmap)
+	
 		# position of robot
 		self.X = 0
 		self.Y = 0
@@ -57,13 +59,17 @@ class mapping():
 	def put_obstacle_bitmap(self, bitmap):
 		self.bitmap = bitmap
 
+	def get_click_location(self):
+		return
+
 	def close_map(self):
 		cv2.waitKey(0)
 		cv2.destroyAllWindows()
 
 
+
 def main():
-	M = mapping('maps/NEBfourthfloor.png', '')
+	M = mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
 	M.display(0)
 	M.close_map()
 
