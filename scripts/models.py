@@ -24,7 +24,7 @@ class WifiOnly(BaseModel):
         model.add(Dense(32))
         model.add(Activation('relu'))
         model.add(Dense(self.output_shape))
-        model.add(Activation('softmax'))
+        model.add(Activation('sigmoid'))
 
         model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
         return model
@@ -36,19 +36,26 @@ class WifiOnlyXY(BaseModel):
 
     def build_model(self):
         model = Sequential()
-        model.add(Dense(256, input_shape=self.input_shape))
+        model.add(Dense(256, input_shape=self.input_shape, kernel_initializer='he_normal'))
         model.add(Activation('relu'))
 #        model.add(Dropout(0.5))
-        model.add(Dense(64))
+        model.add(Dense(64, kernel_initializer='he_normal'))
         model.add(Activation('relu'))
-        model.add(Dense(32))
+        model.add(Dense(32, kernel_initializer='he_normal'))
         model.add(Activation('relu'))
-        model.add(Dense(self.output_shape))
+        model.add(Dense(self.output_shape, kernel_initializer='he_normal'))
         model.add(Activation('linear'))
+
+        model.compile(optimizer='rmsprop', loss='mse')
+        return model
+
+class Conv1D_WifiOnly(BaseModel):
+
+    def build_model(self):
+        model = Sequential()
 
         model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
         return model
- 
 class LSTM(BaseModel):
     '''
     LSTM Model

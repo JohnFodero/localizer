@@ -10,7 +10,9 @@ wifi = wifi_scanner('wlp3s0')
 
 office_loc = localizer(wifi)
 
-locations = [[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+locations = [[0.0, 0.0], [0.5, 0.0], [1.0, 0.0], 
+             [0.0, 0.5], [0.5, 0.5], [1.0, 0.5],
+             [0.0, 1.0], [0.5, 1.0], [1.0, 1.0]]
 f, wr = start_capture()
 for x, y in locations:
     print('Collecting at :', x, y)

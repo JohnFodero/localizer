@@ -1,14 +1,13 @@
 # localizer
 
 import os
-from scanner import *
 from tools import *
 import numpy as np
 import pickle
 
 
 class localizer():
-    def __init__(self, wifi):
+    def __init__(self, wifi=None):
         self.wifi = wifi
         self.profile_path = './network_profiles/'
         self.profile_name = None

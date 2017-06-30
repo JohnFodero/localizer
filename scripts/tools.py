@@ -4,6 +4,16 @@ import csv
 import datetime
 import numpy as np
 import os
+from sklearn.preprocessing import MinMaxScaler
+DEFAULT_RSSI = -100
+DEFAULT_QUALITY = 0
+
+def scale_inputs(X, imin=-100, imax=-30, omin=0., omax=1.):
+    X[X == 0.] = -100
+    X[X < -100] = -100
+    X[X > -30] = -30
+    return (X - imin) * ((omax - omin) / (imax - imin)) + omin
+
 
 def start_capture(file_name=None, file_path=None):
     if file_path is None:
@@ -44,7 +54,7 @@ def capture(localizer, num_samples=1000, delay_sec=1):
             sleep(delay_sec)
 
 
-def load_data_from_file(file_path, profile=None):
+def load_data_from_file(file_path, profile=None, keep_percent=1.0):
     X_data = None
     y_data = None
     if profile is not None:
@@ -57,16 +67,21 @@ def load_data_from_file(file_path, profile=None):
                 img1, img2 = row[5], row[6]
                 cells = []
                 count = 0
-                for addr in profile:
-                    for cell in row[7:]:
-                        mac, rssi, quality = cell.split(' ')
-                        if addr == mac:
-                            cells.append(rssi)
-                            cells.append(quality)
-                            break
+                cutoff = keep_percent * len(profile)
+                for i, addr in enumerate(profile):
+                    if i < cutoff:
+                        for cell in row[7:]:
+                            mac, rssi, quality = cell.split(' ')
+                            if addr == mac:
+                                cells.append(float(rssi))
+                                cells.append(float(quality))
+                                break
+                        else:
+                            cells.append(DEFAULT_RSSI)
+                            cells.append(DEFAULT_QUALITY)
                     else:
-                        cells.append(0)
-                        cells.append(0)
+                        cells.append(DEFAULT_RSSI)
+                        cells.append(DEFAULT_QUALITY)
                 cells = np.expand_dims(np.array(cells), axis=0)
                 y_val = np.expand_dims(np.array([X, y]), axis=0)
                 if X_data is None:
@@ -79,13 +94,13 @@ def load_data_from_file(file_path, profile=None):
         print('No profile provided.. returning empty')
     return X_data, y_data
 
-def load_data_from_folder(folder_path, profile=None):
+def load_data_from_folder(folder_path, profile=None, keep_percent=0.0):
     X = None
     y = None
     file_count = 0
     if profile is not None:
         for file_name in os.listdir(folder_path):
-            X_temp, y_temp = load_data_from_file(folder_path + '/' + file_name, profile)
+            X_temp, y_temp = load_data_from_file(folder_path + '/' + file_name, profile, keep_percent=keep_percent)
             if X is None:
                 X = np.array(X_temp)
                 y = np.array(y_temp)

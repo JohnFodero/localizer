@@ -9,7 +9,7 @@ import pickle
 import os
 import numpy as np
 
-DEFAULT_RSSI = 0
+DEFAULT_RSSI = -100
 DEFAULT_QUALITY = 0
 
 class wifi_scanner():
@@ -48,7 +48,7 @@ class wifi_scanner():
                 for cell in cells:
                     mac_addr, rssi, quality = self.parse_cell_line(cell)
                     if mac_addr == p_cell:
-                        profiled_cells.append([rssi, quality])
+                        profiled_cells.append([int(rssi), int(quality)])
                         break
                 else:
                      profiled_cells.append([DEFAULT_RSSI, DEFAULT_QUALITY])
