@@ -5,14 +5,23 @@ import datetime
 import numpy as np
 import os
 from sklearn.preprocessing import MinMaxScaler
-DEFAULT_RSSI = -100
-DEFAULT_QUALITY = 0
+DEFAULT_RSSI = -100.
+DEFAULT_QUALITY = 0.
 
 def scale_inputs(X, imin=-100, imax=-30, omin=0., omax=1.):
     X[X == 0.] = -100
     X[X < -100] = -100
     X[X > -30] = -30
     return (X - imin) * ((omax - omin) / (imax - imin)) + omin
+
+def scale_single(x, imin=-100, imax=-30, omin=0., omax=1.):
+    if x == 0:
+        x = -100
+    elif x < -100:
+        x = -100
+    elif x > -30:
+        x = -30
+    return (x - imin) * ((omax - omin) / (imax - imin)) + omin
 
 
 def start_capture(file_name=None, file_path=None):
@@ -73,15 +82,15 @@ def load_data_from_file(file_path, profile=None, keep_percent=1.0):
                         for cell in row[7:]:
                             mac, rssi, quality = cell.split(' ')
                             if addr == mac:
-                                cells.append(float(rssi))
-                                cells.append(float(quality))
+                                cells.append(scale_single(float(rssi)))
+                                cells.append(float(quality)/100.)
                                 break
                         else:
-                            cells.append(DEFAULT_RSSI)
-                            cells.append(DEFAULT_QUALITY)
+                            cells.append(scale_single(DEFAULT_RSSI))
+                            cells.append(DEFAULT_QUALITY/100.)
                     else:
-                        cells.append(DEFAULT_RSSI)
-                        cells.append(DEFAULT_QUALITY)
+                        cells.append(scale_single(DEFAULT_RSSI))
+                        cells.append(DEFAULT_QUALITY/100.)
                 cells = np.expand_dims(np.array(cells), axis=0)
                 y_val = np.expand_dims(np.array([X, y]), axis=0)
                 if X_data is None:
@@ -94,7 +103,7 @@ def load_data_from_file(file_path, profile=None, keep_percent=1.0):
         print('No profile provided.. returning empty')
     return X_data, y_data
 
-def load_data_from_folder(folder_path, profile=None, keep_percent=0.0):
+def load_data_from_folder(folder_path, profile=None, train_test_split=0.8, keep_percent=1.0, item='both'):
     X = None
     y = None
     file_count = 0
@@ -110,4 +119,19 @@ def load_data_from_folder(folder_path, profile=None, keep_percent=0.0):
             print('{} loaded'.format(file_name))
             file_count += 1
         print('Loaded {} files from {}'.format(file_count, folder_path))
-    return X, y
+
+
+    np.random.seed(7)
+    p = np.random.permutation(len(X))
+    X, y = X[p], y[p]
+    if item == 'rssi':
+        X = X[:,::2]
+        X = scale_inputs(X)
+    elif item == 'quality':
+        X = X[:,1::2]
+        X /= 100.
+
+    split = int(train_test_split * X.shape[0])
+    X_train, X_test = X[:split], X[split:]
+    y_train, y_test = y[:split], y[split:]
+    return X_train, y_train, X_test, y_test

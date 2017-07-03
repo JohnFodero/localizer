@@ -20,6 +20,6 @@ for x, y in locations:
     for i in range(100):
         write_line(wr, office_loc, x, y, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1='na', img2='na')
         sleep(1)
-        print('sample ', i, end='\r')
+        print('sample ', i)
 
 stop_capture(f)

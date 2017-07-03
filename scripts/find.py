@@ -18,7 +18,7 @@ model = load_model('../models/lab_xy2.hdf5')
 model.summary()
 
 while True:
-    cells = np.expand_dims(lab_loc.wifi.get_wifi_cells(lab_loc.profile), axis=0)[:, ::2]
+    cells = np.expand_dims(lab_loc.wifi.get_wifi_cells(lab_loc.profile, item='rssi'), axis=0)
     cells = scale_inputs(cells)
     print(model.predict(cells))
     sleep(0.5)

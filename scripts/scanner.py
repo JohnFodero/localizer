@@ -28,7 +28,7 @@ class wifi_scanner():
         mac_addr, rssi, quality = cell.split(' ')
         return mac_addr, rssi, quality
 
-    def get_wifi_cells(self, profile=None):
+    def get_wifi_cells(self, profile=None, item='both'):
         cells = None
         while cells is None:
             try:
@@ -48,9 +48,19 @@ class wifi_scanner():
                 for cell in cells:
                     mac_addr, rssi, quality = self.parse_cell_line(cell)
                     if mac_addr == p_cell:
-                        profiled_cells.append([int(rssi), int(quality)])
+                        if item == 'rssi':
+                            profiled_cells.append([int(rssi)])
+                        elif item == 'quality':
+                            profiled_cells.append([int(quality)])
+                        else:
+                            profiled_cells.append([int(rssi), int(quality)])
                         break
                 else:
-                     profiled_cells.append([DEFAULT_RSSI, DEFAULT_QUALITY])
+                    if item == 'rssi':
+                        profiled_cells.append([int(DEFAULT_RSSI)])
+                    elif item == 'quality':
+                        profiled_cells.append([int(DEFAULT_QUALITY)])
+                    else:
+                        profiled_cells.append([int(DEFAULT_RSSI), int(DEFAULT_QUALITY)])
             return np.array(profiled_cells).flatten()
 
