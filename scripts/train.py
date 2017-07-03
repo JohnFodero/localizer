@@ -9,8 +9,11 @@ from sklearn.metrics import mean_squared_error
 
 wifi = wifi_scanner('wlp3s0')
 
+localizers = []
 lab_loc = localizer(wifi)
 lab_loc.load_profile('lab_profile')
+localizers.append(lab_loc)
+
 
 print(lab_loc)
 
@@ -23,20 +26,29 @@ print(shape_str.format('TRAIN', str(X_train.shape), str(y_train.shape)))
 print(shape_str.format('TEST', str(X_test.shape), str(y_test.shape)))
 
 # 1) build model
-# 2) compile model
-model = WifiOnlyXY(input_shape=X.shape[1:], output_shape=2).model
-model.summary()
+# 2) compile model(s)
+models = []
+model = WifiOnlyXY(input_shape=X_train.shape[1:], output_shape=2).model
+models.append((model, 'WifiStandard'))
+model2 = MinimalWifiOnlyXY(input_shape=X_train.shape[1:], output_shape=2).model
+models.append((model2, 'WifiSimple'))
+
 
 # 3) fit model
-epochs = 100
+epochs = 1000
 batch_size = 32
 
-checkpoint = ModelCheckpoint(filepath='../models/lab_xyQ.hdf5', monitor='val_loss', verbose=0, save_best_only=True, mode='min')
-model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_split=0.1, verbose=0, callbacks=[checkpoint])
+for localizer in localizers:
+    loc_name = localizer.name
+    for model in models:
 
-# 4) evaluate model
-print('Training MSE: {}'.format(model.evaluate(X_train, y_train, verbose=0)))
-print('Testing MSE: {}'.format(model.evaluate(X_test, y_test, verbose=0)))
+        checkpoint = ModelCheckpoint(filepath='../models/{}-{}.hdf5'.format(loc_name, model[1]), monitor='val_loss', verbose=0, save_best_only=True, mode='min')
+        model[0].fit(X_train, y_train, epochs=epochs, batch_size=batch_size, validation_split=0.1, verbose=0, callbacks=[checkpoint])
+
+        # 4) evaluate model
+        print('{}-{}'.format(loc_name, model[1]))
+        print('Training MSE: {}'.format(model.evaluate(X_train, y_train, verbose=0)))
+        print('Testing MSE: {}'.format(model.evaluate(X_test, y_test, verbose=0)))
 
 # 5) predict
-# find.py
+# see find.py
