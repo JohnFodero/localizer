@@ -1,11 +1,12 @@
 import cv2
 from math import floor
 import numpy as np
+from time import sleep
 
 # Map origin is top left corner
 
 DISPLAY_SCALE = 0.5
-KOBUKI_DIAMETER_GLOBAL = 0.35 # in meters
+KOBUKI_DIAMETER_GLOBAL = 0.35*10 # in meters
 
 # dimensions of map in meters
 MAP_WIDTH_GLOBAL = 100
@@ -57,9 +58,11 @@ class mapping():
 		if(mode == 1):
 			cv2.imshow('map', self.map_img_kobuki)
 		# mode 2 = only bitmap
+
+		cv2.waitKey(30)
 	
 	def draw_kobuki(self, x, y):
-		self.map_img_kobuki = self.map_img
+		self.map_img_kobuki = self.map_img.copy()
 		cv2.circle(self.map_img_kobuki, (x, y), self.kobuki_radius_local, (255,0,0), -1)
 
 	def get_obstacle_bitmap(self):
@@ -72,6 +75,9 @@ class mapping():
 		self.put_location(x,y)
 		self.draw_kobuki(x,y)
 		self.update_display(1)
+
+	def remove_kobuki(self):
+		self.update_display(0)
 
 	def get_click_location(self):
 		return
@@ -86,6 +92,12 @@ def main():
 	M = mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
 	M.initiate_display()
 	M.update_kobuki(100,100)
+	print("Sleeping 1")
+	sleep(3)
+	M.remove_kobuki()
+	print("sleeping 2")
+	sleep(3)
+	M.update_kobuki(200,200)
 	M.close_display()
 
 if __name__ == '__main__':
