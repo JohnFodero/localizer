@@ -6,7 +6,7 @@ from time import sleep
 # Map origin is top left corner
 
 DISPLAY_SCALE = 0.5
-KOBUKI_DIAMETER_GLOBAL = 0.35*10 # in meters
+KOBUKI_DIAMETER_GLOBAL = 0.35 # in meters
 
 # dimensions of map in meters
 MAP_WIDTH_GLOBAL = 100
@@ -49,6 +49,8 @@ class mapping():
 	def initiate_display(self):
 		cv2.namedWindow('map', cv2.WINDOW_NORMAL)
 		cv2.resizeWindow('map', self.map_height_display, self.map_width_display)
+		cv2.setMouseCallback("map", self.click_and_update)
+		self.update_display(0)
 
 	def update_display(self, mode):
 		# mode 0 = only show map
@@ -79,6 +81,18 @@ class mapping():
 	def remove_kobuki(self):
 		self.update_display(0)
 
+	def click_and_update(self, event, x, y, flags, param):
+		if(event==cv2.EVENT_LBUTTONDBLCLK):
+			self.X = x
+			self.Y = y
+			print("x: ", x, " y: ", y)
+			self.update_kobuki(x,y)
+
+		elif(event==cv2.EVENT_RBUTTONDBLCLK):
+			print("x: ", x, " y: ", y)
+
+	#def update_kobuki_with_click(self):
+
 	def get_click_location(self):
 		return
 
@@ -98,6 +112,7 @@ def main():
 	print("sleeping 2")
 	sleep(3)
 	M.update_kobuki(200,200)
+	#M.update_kobuki_with_click()
 	M.close_display()
 
 if __name__ == '__main__':
