@@ -105,12 +105,6 @@ class mapping():
 def main():
 	M = mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
 	M.initiate_display()
-	M.update_kobuki(100,100)
-	print("Sleeping 1")
-	sleep(3)
-	M.remove_kobuki()
-	print("sleeping 2")
-	sleep(3)
 	M.update_kobuki(200,200)
 	#M.update_kobuki_with_click()
 	M.close_display()
