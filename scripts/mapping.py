@@ -1,6 +1,7 @@
 import cv2
 from math import floor
 import numpy as np
+from time import sleep
 
 # Map origin is top left corner
 
@@ -48,6 +49,8 @@ class mapping():
 	def initiate_display(self):
 		cv2.namedWindow('map', cv2.WINDOW_NORMAL)
 		cv2.resizeWindow('map', self.map_height_display, self.map_width_display)
+		cv2.setMouseCallback("map", self.click_and_update)
+		self.update_display(0)
 
 	def update_display(self, mode):
 		# mode 0 = only show map
@@ -57,9 +60,11 @@ class mapping():
 		if(mode == 1):
 			cv2.imshow('map', self.map_img_kobuki)
 		# mode 2 = only bitmap
+
+		cv2.waitKey(30)
 	
 	def draw_kobuki(self, x, y):
-		self.map_img_kobuki = self.map_img
+		self.map_img_kobuki = self.map_img.copy()
 		cv2.circle(self.map_img_kobuki, (x, y), self.kobuki_radius_local, (255,0,0), -1)
 
 	def get_obstacle_bitmap(self):
@@ -73,6 +78,21 @@ class mapping():
 		self.draw_kobuki(x,y)
 		self.update_display(1)
 
+	def remove_kobuki(self):
+		self.update_display(0)
+
+	def click_and_update(self, event, x, y, flags, param):
+		if(event==cv2.EVENT_LBUTTONDBLCLK):
+			self.X = x
+			self.Y = y
+			print("x: ", x, " y: ", y)
+			self.update_kobuki(x,y)
+
+		elif(event==cv2.EVENT_RBUTTONDBLCLK):
+			print("x: ", x, " y: ", y)
+
+	#def update_kobuki_with_click(self):
+
 	def get_click_location(self):
 		return
 
@@ -85,7 +105,8 @@ class mapping():
 def main():
 	M = mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
 	M.initiate_display()
-	M.update_kobuki(100,100)
+	M.update_kobuki(200,200)
+	#M.update_kobuki_with_click()
 	M.close_display()
 
 if __name__ == '__main__':
