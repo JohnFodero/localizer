@@ -16,16 +16,30 @@ DEFAULT_QUALITY = 0
 class jetson_wifi_scanner():
     def __init__(self):
         self.sorted = True
-    
-    def get_ap_dict(self):
+        self.device = 'wlan0'
+ 
+    def get_ap_group(self, ret_type='dict'):
+        if ret_type != 'dict' and ret_type != 'list':
+            print('ret_type {} invalid'.format(ret_type))
+            return None
         ap_dict = {}
-        ap_str = check_output('sudo iw dev wlan0 scan | egrep "signal|^BSS" | sed -e "s/\\tsignal: \(-[0-9]\{2\}\).*/\\1/" -e "s/^BSS \([0-9a-z:]\{17\}\)(on wlan0).*/\\1/" | awk \'{ORS = (NR % 2 == 0)? "\\n" : " "; print}\'', shell=True).decode()
+        ap_list_sorted = []
+        ap_str = ''
+        while ap_str == '':
+            ap_str = check_output('sudo iw dev wlan0 scan | egrep "signal|^BSS" | sed -e "s/\\tsignal: \(-[0-9]\{2\}\).*/\\1/" -e "s/^BSS \([0-9a-z:]\{17\}\)(on wlan0).*/\\1/" | awk \'{ORS = (NR % 2 == 0)? "\\n" : " "; print}\'', shell=True).decode()
+
         ap_list = ap_str.splitlines()
         for ap in ap_list:
             address, rssi = ap.split(' ')
             mac_addr = str(int(address.replace(':', ''), base=16))
             ap_dict[mac_addr] = int(rssi)
-        return ap_dict
+            ap_list_sorted.append([mac_addr, int(rssi)])
+        if ret_type == 'dict':
+            return ap_dict
+        elif ret_type == 'list':
+            ap_list_sorted.sort(key=lambda x: x[1], reverse=True)
+            return np.array(ap_list_sorted)
+        
 
     def get_profiled_cells(self, profile=None):
         if profile is not None:
