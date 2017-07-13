@@ -87,7 +87,7 @@ def capture(localizer, num_samples=1000, delay_sec=1):
             sleep(delay_sec)
 
 
-def load_data_from_file(file_path, profile=None, keep_percent=1.0):
+def load_data_from_file(file_path, profile=None):
     X_data = None
     y_data = None
     if profile is not None:
@@ -100,18 +100,13 @@ def load_data_from_file(file_path, profile=None, keep_percent=1.0):
                 img1, img2 = row[5], row[6]
                 cells = []
                 count = 0
-                cutoff = keep_percent * len(profile)
                 for i, addr in enumerate(profile):
-                    if i < cutoff:
-                        for cell in row[7:]:
-                            mac, rssi, quality = cell.split(' ')
-                            if addr == mac:
-                                cells.append(scale_single(float(rssi)))
-                                cells.append(float(quality)/100.)
-                                break
-                        else:
-                            cells.append(scale_single(DEFAULT_RSSI))
-                            cells.append(DEFAULT_QUALITY/100.)
+                    for cell in row[7:]:
+                        mac, rssi, quality = cell.split(' ')
+                        if addr == mac:
+                            cells.append(scale_single(float(rssi)))
+                            cells.append(float(quality)/100.)
+                            break
                     else:
                         cells.append(scale_single(DEFAULT_RSSI))
                         cells.append(DEFAULT_QUALITY/100.)
