@@ -17,7 +17,7 @@ class localizer():
         print_str = '----------------------------------------'
         print_str += '\nLocalizer\nWifi Device: {}\n'.format(self.wifi.device)
         if self.profile_name is not None:
-            print_str += 'Profile: {} Length: {}\nRouters:'.format(self.profile_name, len(self.profile))
+            print_str += 'Profile: {}  -  Length: {}\nRouters:'.format(self.profile_name, len(self.profile))
             for router in self.profile:
                 print_str += '\n    {}'.format(router)
         print_str += '\n----------------------------------------'
@@ -62,3 +62,9 @@ class localizer():
             self.profile = profile
         else:
             print('{}: Is not a valid profile name.'.format(profile_name))
+
+    def get_mag_reading(self):
+        pass
+
+    def get_images(self):
+        pass

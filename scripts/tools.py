@@ -23,18 +23,26 @@ def scale_single(x, imin=-100, imax=-30, omin=0., omax=1.):
         x = -30
     return (x - imin) * ((omax - omin) / (imax - imin)) + omin
 
+def scale_xy(x, y, imin, imax, omin, omax):
+    x = (x - imin) * ((omax - omin) / (imax - imin)) + omin
+    y = (y - imin) * ((omax - omin) / (imax - imin)) + omin
+    return x, y
+
 
 def start_capture(file_name=None, file_path=None):
     if file_path is None:
         file_path = '../datasets/'
     if file_name is None:
-        file_name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
+        location_name = input('Enter the location name: ')
+        file_name = location_name + '_' + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
     f = open(file_path + file_name, 'wt')
     return f, csv.writer(f, delimiter=',')
 
 def write_line(writer=None, localizer=None, x=0.0, y=0.0, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1='na', img2='na'):
     if localizer is not None and writer is not None:
         cells = localizer.wifi.get_wifi_cells()
+        # localizer.get_mag_reading()
+        # localizer.get_images()
         writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *cells])
 
 def stop_capture(file_obj):
@@ -63,7 +71,8 @@ def capture(localizer, num_samples=1000, delay_sec=1):
             sleep(delay_sec)
 
 
-def load_data_from_file(file_path, profile=None, keep_percent=1.0):
+def load_data_from_file(file_path, profile=None, item='both'):
+    drop_level = -60
     X_data = None
     y_data = None
     if profile is not None:
@@ -76,21 +85,22 @@ def load_data_from_file(file_path, profile=None, keep_percent=1.0):
                 img1, img2 = row[5], row[6]
                 cells = []
                 count = 0
-                cutoff = keep_percent * len(profile)
                 for i, addr in enumerate(profile):
-                    if i < cutoff:
-                        for cell in row[7:]:
-                            mac, rssi, quality = cell.split(' ')
-                            if addr == mac:
+                    for cell in row[7:]:
+                        mac, rssi, quality = cell.split(' ')
+                        if addr == mac:
+                            if float(rssi) > drop_level:
                                 cells.append(scale_single(float(rssi)))
-                                cells.append(float(quality)/100.)
-                                break
-                        else:
-                            cells.append(scale_single(DEFAULT_RSSI))
-                            cells.append(DEFAULT_QUALITY/100.)
+                            else:
+                                cells.append(scale_single(DEFAULT_RSSI))
+                            #cells.append(float(rssi))
+                            cells.append(float(quality)/100.)
+                            break
                     else:
                         cells.append(scale_single(DEFAULT_RSSI))
+                        #cells.append(DEFAULT_RSSI)
                         cells.append(DEFAULT_QUALITY/100.)
+
                 cells = np.expand_dims(np.array(cells), axis=0)
                 y_val = np.expand_dims(np.array([X, y]), axis=0)
                 if X_data is None:
@@ -99,37 +109,37 @@ def load_data_from_file(file_path, profile=None, keep_percent=1.0):
                 else:
                     X_data = np.concatenate((X_data, cells), axis=0)
                     y_data = np.concatenate((y_data, y_val), axis=0)
+        if item == 'rssi':
+            X_data = X_data[:, ::2]
+        elif item == 'quality':
+            X_data = X_data[:, 1::2]
     else:
         print('No profile provided.. returning empty')
     return X_data, y_data
 
-def load_data_from_folder(folder_path, profile=None, train_test_split=0.8, keep_percent=1.0, item='both'):
+
+def load_data_from_folder(folder_path, profile=None, train_test_split=0.8, randomize=True, item='both'):
     X = None
     y = None
     file_count = 0
     if profile is not None:
         for file_name in os.listdir(folder_path):
-            X_temp, y_temp = load_data_from_file(folder_path + '/' + file_name, profile, keep_percent=keep_percent)
-            if X is None:
-                X = np.array(X_temp)
-                y = np.array(y_temp)
-            else:
-                X = np.concatenate((X, X_temp))
-                y = np.concatenate((y, y_temp))
-            print('{} loaded'.format(file_name))
-            file_count += 1
+            if os.path.isfile(folder_path + '/' + file_name):
+                X_temp, y_temp = load_data_from_file(folder_path + '/' + file_name, profile, item=item)
+                if X is None:
+                    X = np.array(X_temp)
+                    y = np.array(y_temp)
+                else:
+                    X = np.concatenate((X, X_temp))
+                    y = np.concatenate((y, y_temp))
+                print('{} loaded'.format(file_name))
+                file_count += 1
         print('Loaded {} files from {}'.format(file_count, folder_path))
 
-
-    np.random.seed(7)
-    p = np.random.permutation(len(X))
-    X, y = X[p], y[p]
-    if item == 'rssi':
-        X = X[:,::2]
-        X = scale_inputs(X)
-    elif item == 'quality':
-        X = X[:,1::2]
-        X /= 100.
+    if randomize:
+        np.random.seed(7)
+        p = np.random.permutation(len(X))
+        X, y = X[p], y[p]
 
     split = int(train_test_split * X.shape[0])
     X_train, X_test = X[:split], X[split:]
