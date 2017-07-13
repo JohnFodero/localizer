@@ -2,12 +2,13 @@
 
 import os
 from tools import *
+from scanner import *
 import numpy as np
 import pickle
 
 
 class localizer():
-    def __init__(self, wifi=None):
+    def __init__(self, wifi=jetson_wifi_scanner()):
         self.wifi = wifi
         self.profile_path = './network_profiles/'
         self.profile_name = None

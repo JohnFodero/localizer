@@ -20,11 +20,10 @@ def capture_images(cam1, cam2, path='../datasets/images/'):
     path2 = path + name + '_cam2.jpg'
     _1, img1 = cam1.read()
     _2, img2 = cam2.read()
-    cv2.imshow('frame1', img1)
-    cv2.imshow('frame2', img2)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    print('writing images')
+#    cv2.imshow('frame1', img1)
+#    cv2.imshow('frame2', img2)
+#    cv2.waitKey(0)
+#    cv2.destroyAllWindows()
     cv2.imwrite(path1, img1)
     cv2.imwrite(path2, img2)
     return path1, path2
