@@ -61,7 +61,7 @@ class mapping():
 			cv2.imshow('map', self.map_img_kobuki)
 		# mode 2 = only bitmap
 
-		cv2.waitKey(30)
+		cv2.waitKey(50)
 	
 	def draw_kobuki(self, x, y):
 		self.map_img_kobuki = self.map_img.copy()

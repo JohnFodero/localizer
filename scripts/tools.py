@@ -5,8 +5,29 @@ import datetime
 import numpy as np
 import os
 from sklearn.preprocessing import MinMaxScaler
+import cv2
+
 DEFAULT_RSSI = -100.
 DEFAULT_QUALITY = 0.
+
+def start_image_capture(cam1=1, cam2=2):
+    return cv2.VideoCapture(cam1), cv2.VideoCapture(cam2)
+
+
+def capture_images(cam1, cam2, path='../datasets/images/'):
+    name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+    path1 = path + name + '_cam1.jpg'
+    path2 = path + name + '_cam2.jpg'
+    t1, img1 = cam1.read()
+    print(t1)
+#    _2, img2 = cam2.read()
+#    cv2.imshow('frame1', img1)
+#    cv2.imshow('frame2', img2)
+#    cv2.waitKey(0)
+#    cv2.destroyAllWindows()
+    cv2.imwrite(path1, img1)
+    cv2.imwrite(path2, img1)
+    return path1, path2
 
 def scale_inputs(X, imin=-100, imax=-30, omin=0., omax=1.):
     X[X == 0.] = -100
@@ -23,27 +44,22 @@ def scale_single(x, imin=-100, imax=-30, omin=0., omax=1.):
         x = -30
     return (x - imin) * ((omax - omin) / (imax - imin)) + omin
 
-def scale_xy(x, y, imin, imax, omin, omax):
-    x = (x - imin) * ((omax - omin) / (imax - imin)) + omin
-    y = (y - imin) * ((omax - omin) / (imax - imin)) + omin
-    return x, y
-
 
 def start_capture(file_name=None, file_path=None):
     if file_path is None:
         file_path = '../datasets/'
     if file_name is None:
-        location_name = input('Enter the location name: ')
-        file_name = location_name + '_' + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
+        file_name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
     f = open(file_path + file_name, 'wt')
     return f, csv.writer(f, delimiter=',')
 
 def write_line(writer=None, localizer=None, x=0.0, y=0.0, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1='na', img2='na'):
     if localizer is not None and writer is not None:
-        cells = localizer.wifi.get_wifi_cells()
-        # localizer.get_mag_reading()
-        # localizer.get_images()
-        writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *cells])
+        cells = localizer.wifi.get_ap_group('list')
+        mod_cells = []
+        for row in cells:
+            mod_cells.append(row[0] + ' ' + str(row[1]))
+        writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *mod_cells])
 
 def stop_capture(file_obj):
     file_obj.close()
@@ -71,8 +87,7 @@ def capture(localizer, num_samples=1000, delay_sec=1):
             sleep(delay_sec)
 
 
-def load_data_from_file(file_path, profile=None, item='both'):
-    drop_level = -60
+def load_data_from_file(file_path, profile=None):
     X_data = None
     y_data = None
     if profile is not None:
@@ -89,18 +104,12 @@ def load_data_from_file(file_path, profile=None, item='both'):
                     for cell in row[7:]:
                         mac, rssi, quality = cell.split(' ')
                         if addr == mac:
-                            if float(rssi) > drop_level:
-                                cells.append(scale_single(float(rssi)))
-                            else:
-                                cells.append(scale_single(DEFAULT_RSSI))
-                            #cells.append(float(rssi))
+                            cells.append(scale_single(float(rssi)))
                             cells.append(float(quality)/100.)
                             break
                     else:
                         cells.append(scale_single(DEFAULT_RSSI))
-                        #cells.append(DEFAULT_RSSI)
                         cells.append(DEFAULT_QUALITY/100.)
-
                 cells = np.expand_dims(np.array(cells), axis=0)
                 y_val = np.expand_dims(np.array([X, y]), axis=0)
                 if X_data is None:
@@ -109,37 +118,37 @@ def load_data_from_file(file_path, profile=None, item='both'):
                 else:
                     X_data = np.concatenate((X_data, cells), axis=0)
                     y_data = np.concatenate((y_data, y_val), axis=0)
-        if item == 'rssi':
-            X_data = X_data[:, ::2]
-        elif item == 'quality':
-            X_data = X_data[:, 1::2]
     else:
         print('No profile provided.. returning empty')
     return X_data, y_data
 
-
-def load_data_from_folder(folder_path, profile=None, train_test_split=0.8, randomize=True, item='both'):
+def load_data_from_folder(folder_path, profile=None, train_test_split=0.8, keep_percent=1.0, item='both'):
     X = None
     y = None
     file_count = 0
     if profile is not None:
         for file_name in os.listdir(folder_path):
-            if os.path.isfile(folder_path + '/' + file_name):
-                X_temp, y_temp = load_data_from_file(folder_path + '/' + file_name, profile, item=item)
-                if X is None:
-                    X = np.array(X_temp)
-                    y = np.array(y_temp)
-                else:
-                    X = np.concatenate((X, X_temp))
-                    y = np.concatenate((y, y_temp))
-                print('{} loaded'.format(file_name))
-                file_count += 1
+            X_temp, y_temp = load_data_from_file(folder_path + '/' + file_name, profile, keep_percent=keep_percent)
+            if X is None:
+                X = np.array(X_temp)
+                y = np.array(y_temp)
+            else:
+                X = np.concatenate((X, X_temp))
+                y = np.concatenate((y, y_temp))
+            print('{} loaded'.format(file_name))
+            file_count += 1
         print('Loaded {} files from {}'.format(file_count, folder_path))
 
-    if randomize:
-        np.random.seed(7)
-        p = np.random.permutation(len(X))
-        X, y = X[p], y[p]
+
+    np.random.seed(7)
+    p = np.random.permutation(len(X))
+    X, y = X[p], y[p]
+    if item == 'rssi':
+        X = X[:,::2]
+        X = scale_inputs(X)
+    elif item == 'quality':
+        X = X[:,1::2]
+        X /= 100.
 
     split = int(train_test_split * X.shape[0])
     X_train, X_test = X[:split], X[split:]

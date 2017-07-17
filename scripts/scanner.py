@@ -1,16 +1,58 @@
 # wifi scanner
 
 import os
-if os.geteuid() != 0:
-    exit("You need to have root privileges to run this script.")
+#if os.geteuid() != 0:
+#    exit("You need to have root privileges to run this script.")
 
 from wifi import Cell
 import pickle
 import os
 import numpy as np
+from subprocess import check_output
 
 DEFAULT_RSSI = -100
 DEFAULT_QUALITY = 0
+
+class jetson_wifi_scanner():
+    def __init__(self):
+        self.sorted = True
+        self.device = 'wlp3s0'
+ 
+    def get_ap_group(self, ret_type='dict'):
+        if ret_type != 'dict' and ret_type != 'list':
+            print('ret_type {} invalid'.format(ret_type))
+            return None
+        ap_dict = {}
+        ap_list_sorted = []
+        ap_str = ''
+        while ap_str == '':
+            ap_str = check_output('sudo iw dev wlp3s0 scan | egrep "signal|^BSS" | sed -e "s/\\tsignal: \(-[0-9]\{2\}\).*/\\1/" -e "s/^BSS \([0-9a-z:]\{17\}\)(on wlp3s0).*/\\1/" | awk \'{ORS = (NR % 2 == 0)? "\\n" : " "; print}\'', shell=True).decode()
+
+        ap_list = ap_str.splitlines()
+        for ap in ap_list:
+            address, rssi = ap.split(' ')
+            mac_addr = str(int(address.replace(':', ''), base=16))
+            ap_dict[mac_addr] = int(rssi)
+            ap_list_sorted.append([mac_addr, int(rssi)])
+        if ret_type == 'dict':
+            return ap_dict
+        elif ret_type == 'list':
+            ap_list_sorted.sort(key=lambda x: x[1], reverse=True)
+            return np.array(ap_list_sorted)
+        
+
+    def get_profiled_cells(self, profile=None):
+        if profile is not None:
+            ap_dict = self.get_ap_dict()
+            rssi_list = []
+            for address in profile:
+                try:
+                    rssi = ap_dict[str(address)]
+                except KeyError:
+                    rssi = -100
+                rssi_list.append(rssi)
+            return np.array(rssi_list)
+        return None
 
 class wifi_scanner():
     def __init__(self, device):
@@ -64,3 +106,9 @@ class wifi_scanner():
                         profiled_cells.append([int(DEFAULT_RSSI), int(DEFAULT_QUALITY)])
             return np.array(profiled_cells).flatten()
 
+def main():
+    scanner = jetson_wifi_scanner()
+    print(scanner.get_ap_dict())
+
+if __name__ == '__main__':
+    main()
