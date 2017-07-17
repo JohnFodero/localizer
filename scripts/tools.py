@@ -15,17 +15,18 @@ def start_image_capture(cam1=1, cam2=2):
 
 
 def capture_images(cam1, cam2, path='../datasets/images/'):
-    name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
+    name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
     path1 = path + name + '_cam1.jpg'
     path2 = path + name + '_cam2.jpg'
-    _1, img1 = cam1.read()
-    _2, img2 = cam2.read()
+    t1, img1 = cam1.read()
+    print(t1)
+#    _2, img2 = cam2.read()
 #    cv2.imshow('frame1', img1)
 #    cv2.imshow('frame2', img2)
 #    cv2.waitKey(0)
 #    cv2.destroyAllWindows()
     cv2.imwrite(path1, img1)
-    cv2.imwrite(path2, img2)
+    cv2.imwrite(path2, img1)
     return path1, path2
 
 def scale_inputs(X, imin=-100, imax=-30, omin=0., omax=1.):

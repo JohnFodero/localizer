@@ -1,8 +1,8 @@
 # wifi scanner
 
 import os
-if os.geteuid() != 0:
-    exit("You need to have root privileges to run this script.")
+#if os.geteuid() != 0:
+#    exit("You need to have root privileges to run this script.")
 
 from wifi import Cell
 import pickle
@@ -16,7 +16,7 @@ DEFAULT_QUALITY = 0
 class jetson_wifi_scanner():
     def __init__(self):
         self.sorted = True
-        self.device = 'wlan0'
+        self.device = 'wlp3s0'
  
     def get_ap_group(self, ret_type='dict'):
         if ret_type != 'dict' and ret_type != 'list':
@@ -26,7 +26,7 @@ class jetson_wifi_scanner():
         ap_list_sorted = []
         ap_str = ''
         while ap_str == '':
-            ap_str = check_output('sudo iw dev wlan0 scan | egrep "signal|^BSS" | sed -e "s/\\tsignal: \(-[0-9]\{2\}\).*/\\1/" -e "s/^BSS \([0-9a-z:]\{17\}\)(on wlan0).*/\\1/" | awk \'{ORS = (NR % 2 == 0)? "\\n" : " "; print}\'', shell=True).decode()
+            ap_str = check_output('sudo iw dev wlp3s0 scan | egrep "signal|^BSS" | sed -e "s/\\tsignal: \(-[0-9]\{2\}\).*/\\1/" -e "s/^BSS \([0-9a-z:]\{17\}\)(on wlp3s0).*/\\1/" | awk \'{ORS = (NR % 2 == 0)? "\\n" : " "; print}\'', shell=True).decode()
 
         ap_list = ap_str.splitlines()
         for ap in ap_list:
