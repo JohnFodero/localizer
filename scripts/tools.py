@@ -6,27 +6,28 @@ import numpy as np
 import os
 from sklearn.preprocessing import MinMaxScaler
 import cv2
+import math
 
 DEFAULT_RSSI = -100.
 DEFAULT_QUALITY = 0.
 
-def start_image_capture(cam1=1, cam2=2):
-    return cv2.VideoCapture(cam1), cv2.VideoCapture(cam2)
-
-
-def capture_images(cam1, cam2, path='../datasets/images/'):
-    name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M')
-    path1 = path + name + '_cam1.jpg'
-    path2 = path + name + '_cam2.jpg'
-    _1, img1 = cam1.read()
-    _2, img2 = cam2.read()
-#    cv2.imshow('frame1', img1)
-#    cv2.imshow('frame2', img2)
-#    cv2.waitKey(0)
-#    cv2.destroyAllWindows()
-    cv2.imwrite(path1, img1)
-    cv2.imwrite(path2, img2)
-    return path1, path2
+def rotate_about_center(src, angle, scale=1.):
+    w = src.shape[1]
+    h = src.shape[0]
+    rangle = np.deg2rad(angle)  # angle in radians
+    # now calculate new image width and height
+    nw = (abs(np.sin(rangle)*h) + abs(np.cos(rangle)*w))*scale
+    nh = (abs(np.cos(rangle)*h) + abs(np.sin(rangle)*w))*scale
+    # ask OpenCV for the rotation matrix
+    rot_mat = cv2.getRotationMatrix2D((nw*0.5, nh*0.5), angle, scale)
+    # calculate the move from the old center to the new center combined
+    # with the rotation
+    rot_move = np.dot(rot_mat, np.array([(nw-w)*0.5, (nh-h)*0.5,0]))
+    # the move only affects the translation, so update the translation
+    # part of the transform
+    rot_mat[0,2] += rot_move[0]
+    rot_mat[1,2] += rot_move[1]
+    return cv2.warpAffine(src, rot_mat, (int(math.ceil(nw)), int(math.ceil(nh))), flags=cv2.INTER_LANCZOS4)
 
 def scale_inputs(X, imin=-100, imax=-30, omin=0., omax=1.):
     X[X == 0.] = -100

@@ -1,12 +1,11 @@
 from scanner import *
 from localizer import *
 from tools import *
-#from models import *
 from mapping import *
 import numpy as np
-#import h5py
-#from keras.models import load_model
 from time import sleep
+import datetime
+import cv2
 
 
 wifi = jetson_wifi_scanner()
@@ -17,7 +16,9 @@ office_loc = localizer(wifi)
 #m.initiate_display()
 #m.update_kobuki(200,200)
 f, wr = start_capture()
-cam1, cam2 = start_image_capture(1, 2)
+cam1 = cv2.VideoCapture(1)
+cam2 = cv2.VideoCapture(2)
+path='../datasets/images/'
 print('Cameras started')
 
 while True:
@@ -28,13 +29,25 @@ while True:
     y = input('Y: ')
     print('Collecting at :', x, y)
     input('press enter to begin')
-    path1, path2 = capture_images(cam1, cam2)
+    name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
+    path1 = path + name + '_cam1.jpg'
+    path2 = path + name + '_cam2.jpg'
+    s1, img1 = cam1.read()
+    s2, img2 = cam2.read()
+    img1 = rotate_about_center(img1, 90)
+    img2 = rotate_about_center(img2, 90)
+    cv2.imwrite(path1, img1)
+    cv2.imwrite(path2, img2)
     print('images captured')
-    for i in range(50):
+    for i in range(10):
         # get mag readings
-        # get image
+        # read image anyway even though we aren't saving it..
+        s1, img1 = cam1.read()
+        s2, img2 = cam2.read()
         write_line(wr, office_loc, x, y, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1=path1, img2=path2)
         sleep(1)
         print('sample ', i)
+cam1.release()
+cam2.release()
 m.close_display()
 stop_capture(f)
