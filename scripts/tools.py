@@ -5,8 +5,29 @@ import datetime
 import numpy as np
 import os
 from sklearn.preprocessing import MinMaxScaler
+import cv2
+import math
+
 DEFAULT_RSSI = -100.
 DEFAULT_QUALITY = 0.
+
+def rotate_about_center(src, angle, scale=1.):
+    w = src.shape[1]
+    h = src.shape[0]
+    rangle = np.deg2rad(angle)  # angle in radians
+    # now calculate new image width and height
+    nw = (abs(np.sin(rangle)*h) + abs(np.cos(rangle)*w))*scale
+    nh = (abs(np.cos(rangle)*h) + abs(np.sin(rangle)*w))*scale
+    # ask OpenCV for the rotation matrix
+    rot_mat = cv2.getRotationMatrix2D((nw*0.5, nh*0.5), angle, scale)
+    # calculate the move from the old center to the new center combined
+    # with the rotation
+    rot_move = np.dot(rot_mat, np.array([(nw-w)*0.5, (nh-h)*0.5,0]))
+    # the move only affects the translation, so update the translation
+    # part of the transform
+    rot_mat[0,2] += rot_move[0]
+    rot_mat[1,2] += rot_move[1]
+    return cv2.warpAffine(src, rot_mat, (int(math.ceil(nw)), int(math.ceil(nh))), flags=cv2.INTER_LANCZOS4)
 
 def scale_inputs(X, imin=-100, imax=-30, omin=0., omax=1.):
     X[X == 0.] = -100
@@ -34,8 +55,11 @@ def start_capture(file_name=None, file_path=None):
 
 def write_line(writer=None, localizer=None, x=0.0, y=0.0, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1='na', img2='na'):
     if localizer is not None and writer is not None:
-        cells = localizer.wifi.get_wifi_cells()
-        writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *cells])
+        cells = localizer.wifi.get_ap_group('list')
+        mod_cells = []
+        for row in cells:
+            mod_cells.append(row[0] + ' ' + str(row[1]))
+        writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *mod_cells])
 
 def stop_capture(file_obj):
     file_obj.close()
@@ -63,7 +87,7 @@ def capture(localizer, num_samples=1000, delay_sec=1):
             sleep(delay_sec)
 
 
-def load_data_from_file(file_path, profile=None, keep_percent=1.0):
+def load_data_from_file(file_path, profile=None):
     X_data = None
     y_data = None
     if profile is not None:
@@ -76,18 +100,13 @@ def load_data_from_file(file_path, profile=None, keep_percent=1.0):
                 img1, img2 = row[5], row[6]
                 cells = []
                 count = 0
-                cutoff = keep_percent * len(profile)
                 for i, addr in enumerate(profile):
-                    if i < cutoff:
-                        for cell in row[7:]:
-                            mac, rssi, quality = cell.split(' ')
-                            if addr == mac:
-                                cells.append(scale_single(float(rssi)))
-                                cells.append(float(quality)/100.)
-                                break
-                        else:
-                            cells.append(scale_single(DEFAULT_RSSI))
-                            cells.append(DEFAULT_QUALITY/100.)
+                    for cell in row[7:]:
+                        mac, rssi, quality = cell.split(' ')
+                        if addr == mac:
+                            cells.append(scale_single(float(rssi)))
+                            cells.append(float(quality)/100.)
+                            break
                     else:
                         cells.append(scale_single(DEFAULT_RSSI))
                         cells.append(DEFAULT_QUALITY/100.)

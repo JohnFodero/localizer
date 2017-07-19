@@ -56,6 +56,7 @@ class Conv1D_WifiOnly(BaseModel):
 
         model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
         return model
+
 class LSTM(BaseModel):
     '''
     LSTM Model
@@ -63,4 +64,5 @@ class LSTM(BaseModel):
     def build_model(self):
         model = Sequential()
         return model
+
 
