@@ -9,10 +9,10 @@ DISPLAY_SCALE = 0.5
 KOBUKI_DIAMETER_GLOBAL = 0.35 # in meters
 
 # dimensions of map in meters
-MAP_WIDTH_GLOBAL = 100
-MAP_HEIGHT_GLOBAL = 200
+MAP_WIDTH_GLOBAL = 72.2475
+MAP_HEIGHT_GLOBAL = 54.1775
 
-class mapping():
+class Mapping():
 	def __init__(self, path_to_map_img, path_to_bitmap):
 
 		# read map png file
@@ -46,7 +46,7 @@ class mapping():
 	def get_location(self):
 		return self.X, self.Y
 
-	def initiate_display(self):
+	def initialize_display(self):
 		cv2.namedWindow('map', cv2.WINDOW_NORMAL)
 		cv2.resizeWindow('map', self.map_height_display, self.map_width_display)
 		cv2.setMouseCallback("map", self.click_and_update)
@@ -85,16 +85,11 @@ class mapping():
 		if(event==cv2.EVENT_LBUTTONDBLCLK):
 			self.X = x
 			self.Y = y
-			print("x: ", x, " y: ", y)
+			print("LOCAL-> x: ", x, " y: ", y, " GLOBAL-> x: ", x*self.x_scale, " y: ", y*self.y_scale)
 			self.update_kobuki(x,y)
 
 		elif(event==cv2.EVENT_RBUTTONDBLCLK):
-			print("x: ", x, " y: ", y)
-
-	#def update_kobuki_with_click(self):
-
-	def get_click_location(self):
-		return
+			print("LOCAL-> x: ", x, " y: ", y, " GLOBAL-> x: ", x*self.x_scale, " y: ", y*self.y_scale)
 
 	def close_display(self):
 		cv2.waitKey(0)
@@ -103,8 +98,8 @@ class mapping():
 
 
 def main():
-	M = mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
-	M.initiate_display()
+	M = Mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
+	M.initialize_display()
 	M.update_kobuki(200,200)
 	#M.update_kobuki_with_click()
 	M.close_display()
