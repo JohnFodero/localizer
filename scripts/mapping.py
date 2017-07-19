@@ -44,9 +44,6 @@ class mapping():
         self.X_global = self.X * self.x_scale
         self.Y_global = self.Y * self.y_scale
 
-        # kobuki scale for drawing
-        self.kobuki_scale = 2
-
     # Update the robot's location
     def put_location(self, x, y):
         if(x>=self.map_width_pixel):
@@ -129,6 +126,13 @@ class mapping():
 
     def put_obstacle_bitmap(self, bitmap):
         self.bitmap = bitmap
+
+    def put_kobuki_scale(self, scale):
+        # kobuki scale for drawing
+        self.kobuki_scale = scale
+
+        # Kobuki diameter in local scale
+        self.kobuki_radius_local = floor(((KOBUKI_DIAMETER_GLOBAL/2)*self.kobuki_scale) / self.x_scale)
 
     def update_kobuki(self, x, y):
         self.put_location(x,y)
