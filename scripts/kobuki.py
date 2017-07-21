@@ -20,7 +20,6 @@ class kobuki :
         #initialize Serial communication
         self.serial = Serial(self.dev_path, 115200)
         print("Serial connection to Kobuki initialized")
-        self.stop()
         # throttle and steering variables
         self.thr = 0
         self.steer = 0.5
