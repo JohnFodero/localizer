@@ -8,7 +8,7 @@ import numpy as np
 from time import *
 import datetime
 import cv2
-
+import sys
 class capture():
     def __init__(self):
         self.loc = localizer(jetson_wifi_scanner())
@@ -75,7 +75,7 @@ class capture():
         self.cam1.release()
         self.cam2.release()
         #m.close_display()
-def run()
+def run():
     cap = capture()
     try:
         cap.rotate_capture()
