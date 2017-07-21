@@ -39,11 +39,11 @@ while True:
     cv2.imwrite(path1, img1)
     cv2.imwrite(path2, img2)
     print('images captured')
-    for i in range(10):
+    for i in range(4):
         # get mag readings
         # read image anyway even though we aren't saving it..
-        s1, img1 = cam1.read()
-        s2, img2 = cam2.read()
+#        s1, img1 = cam1.read()
+#        s2, img2 = cam2.read()
         write_line(wr, office_loc, x, y, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1=path1, img2=path2)
         sleep(1)
         print('sample ', i)

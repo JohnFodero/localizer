@@ -35,8 +35,8 @@ while True:
         path2 = path + name + '_cam2.jpg'
         s1, img1 = cam1.read()
         s2, img2 = cam2.read()
-        img1 = rotate_about_center(img1, 90)
-        img2 = rotate_about_center(img2, 90)
+        img1 = rotate_about_center(img1, 180)
+#        img2 = rotate_about_center(img2, 90)
         cv2.imwrite(path1, img1)
         cv2.imwrite(path2, img2)
         write_line(wr, loc, x, y, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1=path1, img2=path2)
