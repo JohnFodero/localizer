@@ -44,6 +44,11 @@ class mapping():
         self.X_global = self.X * self.x_scale
         self.Y_global = self.Y * self.y_scale
 
+        # define colorspace
+        self.color_space = {"RED" : (0,0,255), "LIME" : (0,255,0), "BLUE" : (255,0,0), "YELLOW" : (0,255,255), "CYAN" : (255,255,0), "MAGENTA" : (255,0,255), "MAROON" : (0,0,128), "OLIVE" : (0,128,128), "GREEN" : (0,128,0), "PURPLE" : (128,0,128), "TEAL" : (128,128,0), "NAVY" : (128,0,0)}
+
+        self.colors = ((0,0,255), (0,255,0), (255,0,0), (0,255,255), (255,255,0), (255,0,255), (0,0,128), (0,128,128), (0,128,0), (128,0,128), (128,128,0), (128,0,0))
+
     # Update the robot's location
     def put_location(self, x, y):
         if(x>=self.map_width_pixel):
@@ -113,13 +118,18 @@ class mapping():
         # mode 1 = map + kobuki
         if(mode == 1):
             cv2.imshow('map', self.map_img_kobuki)
-        # mode 2 = only bitmap
+        # mode 2 = map + kobuki history
+        if(mode == 2):
+            cv2.imshow('map', self.map_img_kobuki_history)
 
         cv2.waitKey(50)
     
-    def draw_kobuki(self, x, y):
+    def draw_kobuki(self, x, y, color=(255,0,0)):
         self.map_img_kobuki = self.map_img.copy()
-        cv2.circle(self.map_img_kobuki, (x, y), self.kobuki_radius_local, (255,0,0), -1)
+        cv2.circle(self.map_img_kobuki, (x, y), self.kobuki_radius_local, color, -1)
+
+    def draw_kobuki_history(self, x, y, color=(255,0,0)):
+        cv2.circle(self.map_img_kobuki_history, (x, y), self.kobuki_radius_local, color, -1)
 
     def get_obstacle_bitmap(self):
         return self.bitmap
@@ -139,6 +149,17 @@ class mapping():
         self.draw_kobuki(x,y)
         self.update_display(1)
 
+    def plot_path(self, coords):
+        c = 0
+        self.map_img_kobuki_history = self.map_img.copy()
+        for i in range(len(coords)):
+            for j in coords[i]:
+                self.draw_kobuki_history(j[0], j[1] , self.colors[c])
+            c = c+1
+            if(c==len(self.colors)):
+                c = 0
+        self.update_display(2)
+
     def remove_kobuki(self):
         self.update_display(0)
 
@@ -154,14 +175,15 @@ class mapping():
             print("x(m): ", x*self.x_scale, "y(m): ", y*self.y_scale)
 
     def close_display(self):
-        #cv2.waitKey(0)
+        cv2.waitKey(0)
         cv2.destroyAllWindows()
 
 def main():
     M = mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
     M.initialize_display()
     M.update_kobuki(200,200)
-    coords = [[(10,10), (20, 20), (30, 30)], [(40, 40), (50, 50)]]
+    coords = [[(10,10), (20, 20), (30, 30)], [(40, 40), (50, 50)], [(60,60)], [(70,70)], [(80,80)], [(90,90)], [(100,100)], [(110,110)], [(120,120), (190, 190), (200, 200), (210, 210), (220, 220)], [(130,130)], [(140,140)], [(150,150)], [(160,160)], [(170,170)], [(180,180)]]
+    M.plot_path(coords)
     M.close_display()
 
 if __name__ == '__main__':
