@@ -9,6 +9,7 @@ from time import *
 import datetime
 import cv2
 import sys
+
 class capture():
     def __init__(self):
         self.loc = localizer(jetson_wifi_scanner())
@@ -34,8 +35,8 @@ class capture():
 
         self.mag = magnetometer(port=1, address=0x1E, declination=(-5,53))
 
-        self.frames_per_location = 25   # samples per location
-        self.interval = 1               # seconds per sample
+        self.frames_per_location = 50   # samples per location
+        self.interval = 0.5               # seconds per sample
     
     def rotate_capture(self):
         while True:
@@ -75,7 +76,8 @@ class capture():
         self.cam1.release()
         self.cam2.release()
         #m.close_display()
-def run():
+
+def main():
     cap = capture()
     try:
         cap.rotate_capture()
@@ -84,4 +86,4 @@ def run():
         sys.exit()
         
 if __name__ == '__main__':
-    run()
+    main()
