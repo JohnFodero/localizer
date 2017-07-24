@@ -59,7 +59,7 @@ def write_line(writer=None, localizer=None, x=0.0, y=0.0, mag_x=0.0, mag_y=0.0, 
         mod_cells = []
         for row in cells:
             mod_cells.append(row[0] + ' ' + str(row[1]))
-        writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *mod_cells])
+        #writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *mod_cells])
 
 def stop_capture(file_obj):
     file_obj.close()
@@ -82,7 +82,7 @@ def capture(localizer, num_samples=1000, delay_sec=1):
         wr = csv.writer(f, delimiter=',')
         for i in range(num_samples):
             cells = localizer.wifi.get_wifi_cells()
-            wr.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *cells])
+            #wr.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *cells])
             print('sample ', i, end='\r')
             sleep(delay_sec)
 
