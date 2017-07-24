@@ -161,7 +161,9 @@ def main():
     M = mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
     M.initialize_display()
     M.update_kobuki(200,200)
-    coords = [[(10,10), (20, 20), (30, 30)], [(40, 40), (50, 50)]]
+    #coords = [[(10,10), (20, 20), (30, 30)], [(40, 40), (50, 50)]]
+    while True:
+        M.update_display(0)
     M.close_display()
 
 if __name__ == '__main__':
