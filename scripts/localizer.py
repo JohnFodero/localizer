@@ -61,3 +61,11 @@ class localizer():
             self.profile_name = profile_name
         else:
             print('{}: Is not a valid profile name to load.'.format(profile_name))
+
+def main():
+    l = localizer()
+    l.make_profile('hallway_profile', length=30)
+    print(l)
+
+if __name__ == '__main__':
+    main()
