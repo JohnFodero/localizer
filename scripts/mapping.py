@@ -190,7 +190,7 @@ class mapping():
 
     # close display
     def close_display(self):
-        cv2.waitKey(0)
+        #cv2.waitKey(0)
         cv2.destroyAllWindows()
 
 def main():
