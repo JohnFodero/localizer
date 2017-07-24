@@ -1,9 +1,9 @@
 # wifi scanner
-
-import os
+'''
+import os, sys
 if os.geteuid() != 0:
-    exit("You need to have root privileges to run this script.")
-
+    sys.exit("You need to have root privileges to run this script.")
+'''
 from wifi import Cell
 import pickle
 import os
