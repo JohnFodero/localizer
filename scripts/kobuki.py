@@ -10,7 +10,7 @@ import time
 import csv
 import os
 from datetime import datetime
-
+SPEED = 50
 class kobuki :
     # initialize Kobuki
     def __init__(self, dev_path) :
@@ -70,7 +70,7 @@ class kobuki :
         radius = 0
         speed = 0
         if (thr == 1) :
-            speed = 50
+            speed = SPEED
 
         elif (thr == 0) :
             speed = 0
