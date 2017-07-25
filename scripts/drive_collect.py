@@ -19,9 +19,12 @@ class capture():
     PIVOT_SPEED = 50
     MIN_SPEED = 40
     def __init__(self):
-        self.loc = localizer(jetson_wifi_scanner())
+        self.scanner = jetson_wifi_scanner()
+        self.loc = localizer(self.scanner)
         self.location = '4th Floor NEB'
-        self.file_name = location.replace(' ', '_') + '-' + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M') + '.json'
+        self.path = '../datasets'
+        self.image_path = self.path + '/images'
+        self.file_name = self.location.replace(' ', '_') + '-' + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M') + '.json'
         self.cam1 = cv2.VideoCapture(1)
         self.cam2 = cv2.VideoCapture(2)
         while not self.cam1.isOpened() and not self.cam2.isOpened():
@@ -39,7 +42,7 @@ class capture():
         '''
 
         self.mag = magnetometer(port=1, address=0x1E, declination=(-5,53))
-
+        self.data = {}
         self.frames_per_location = 20     # samples per location
         self.interval = 0.25               # seconds per sample
     '''
@@ -74,14 +77,14 @@ class capture():
 
             # stop kobuki
             self.kob.stop()
+'''
     def pivot_worker(self, speed, direction):
         while self.count < self.frames_per_location:
             self.kob.move(speed, direction)
         print('Thread ended')
         return
-    '''
     def save_data(self, data):
-        with open(self.file_name, 'w') as f:
+        with open(self.path + '/' + self.file_name, 'w') as f:
             json.dump(self.data, f)
             print('Data saved')
         return
@@ -93,9 +96,8 @@ class capture():
         y_delta = int(input('Enter distance per move in y: '))
         x = x_start
         y = y_start
-        data = {}
-        data['location'] = self.location
-        data['datapoints'] = []
+        self.data['location'] = self.location
+        self.data['datapoints'] = []
         while True:
             for i in range(4):
                 # collect data points
@@ -110,8 +112,8 @@ class capture():
                     self.kob.move(speed=self.PIVOT_SPEED, radius=pivot_direction)
                     if time() - start_time > self.interval:
                         name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')
-                        path1 = self.path + name + '_cam1.jpg'
-                        path2 = self.path + name + '_cam2.jpg'
+                        path1 = self.image_path + '/' + name + '_cam1.jpg'
+                        path2 = self.image_path + '/' + name + '_cam2.jpg'
                         s1, img1 = self.cam1.retrieve(f1)
                         s2, img2 = self.cam2.retrieve(f1)
                         heading = self.mag.get_heading()
@@ -120,13 +122,13 @@ class capture():
                             cv2.imwrite(path1, img1)
                             cv2.imwrite(path2, img2)
                             print('sample ', self.count, 'Heading: ', heading)
-                            data['datapoints'].append({})
-                            data['datapoints'][-1]['x'] = x
-                            data['datapoints'][-1]['y'] = y
-                            data['datapoints'][-1]['heading'] = heading
-                            data['datapoints'][-1]['img1'] = path1
-                            data['datapoints'][-1]['img2'] = path2
-                            data['datapoints'][-1]['access_points'] = self.loc.get_ap_group(ret_type='dict')
+                            self.data['datapoints'].append({})
+                            self.data['datapoints'][-1]['x'] = x
+                            self.data['datapoints'][-1]['y'] = y
+                            self.data['datapoints'][-1]['heading'] = heading
+                            self.data['datapoints'][-1]['img1'] = path1
+                            self.data['datapoints'][-1]['img2'] = path2
+                            self.data['datapoints'][-1]['access_points'] = self.scanner.get_ap_group(ret_type='dict')
                             self.count += 1
                             start_time = time()
                         else:
@@ -149,12 +151,12 @@ class capture():
                 x += x_delta
                 y += y_delta
             # write json to file as a backup
-            self.save_data(data)
-            input(Re-center the bot.\nPress any key to begin')
+            self.save_data(self.data)
+            input('Re-center the bot.\nPress any key to begin')
 
             
     def shutdown(self):
-        self.save_data()
+        self.save_data(self.data)
         self.kob.deinitialize()
         self.cam1.release()
         self.cam2.release()

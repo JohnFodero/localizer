@@ -31,7 +31,7 @@ class jetson_wifi_scanner():
         ap_list = ap_str.splitlines()
         for ap in ap_list:
             address, rssi = ap.split(' ')
-            mac_addr = str(int(address.replace(':', ''), base=16))
+            mac_addr = int(address.replace(':', ''), base=16)
             ap_dict[mac_addr] = int(rssi)
             ap_list_sorted.append([mac_addr, int(rssi)])
         if ret_type == 'dict':
