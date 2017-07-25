@@ -12,8 +12,8 @@ import sys
 
 class capture():
     DRIVE_TIME = 9.16
-    DRIVE_TIME_CAL = 0
-    FORWARD_SPEED = 50
+    DRIVE_TIME_CAL = 1.83
+    FORWARD_SPEED = 100
     PIVOT_SPEED = 50
     MIN_SPEED = 40
     def __init__(self):
@@ -41,7 +41,7 @@ class capture():
         self.mag = magnetometer(port=1, address=0x1E, declination=(-5,53))
 
         self.frames_per_location = 20     # samples per location
-        self.interval = 0.5               # seconds per sample
+        self.interval = 0.25               # seconds per sample
     
     def rotate_capture(self):
         while True:
@@ -110,7 +110,7 @@ class capture():
                     f2 = self.cam2.grab()
                 print('Finished collecting, recentering...')
                 while abs(self.mag.get_heading() - start_heading) > 1:
-                    self.kob.move(speed=max(self.PIVOT_SPEED-20, self.MIN_SPEED), steer=pivot_direction)
+                    self.kob.move(speed=max(self.PIVOT_SPEED-20, self.MIN_SPEED), radius=pivot_direction)
                 self.kob.stop()
                 sleep(1)
                 start_time = time()
