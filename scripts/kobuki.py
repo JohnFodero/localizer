@@ -10,7 +10,7 @@ import time
 import csv
 import os
 from datetime import datetime
-SPEED = 50
+
 class kobuki :
     # initialize Kobuki
     def __init__(self, dev_path) :
@@ -65,12 +65,14 @@ class kobuki :
     def stop(self):
         self.send(self.base_control(0,0))
 
-
+    def move(self, speed, radius):
+        self.send(self.base_control(speed, radius))
+       
     def drive(self, thr, steer) :
         radius = 0
         speed = 0
         if (thr == 1) :
-            speed = SPEED
+            speed = 100
 
         elif (thr == 0) :
             speed = 0
@@ -129,7 +131,7 @@ class kobuki :
             self.drive(self.thr,self.steer)
         # Stop robot and exit
         self.stop()
-
+        
 if __name__ == '__main__' :
     kob = kobuki('/dev/ttyUSB0')
     kob.initialize()
