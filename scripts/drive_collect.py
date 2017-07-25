@@ -9,6 +9,7 @@ from time import *
 import datetime
 import cv2
 import sys
+import threading
 
 class capture():
     DRIVE_TIME = 9.16
@@ -74,22 +75,31 @@ class capture():
 
             # stop kobuki
             self.kob.stop()
-            
+    def pivot_worker(self, speed, direction):
+        while self.count < self.frames_per_location:
+            self.kob.move(speed, direction)
+        print('Thread ended')
+        return
+    
     def drive_capture(self):
-        x_start = input('Enter start x: ')
-        y_start = input('Enter starty y: ')
-        x_delta = input('Enter distance per move in x')
-        y_delta = input('Enter distance per move in y')
+        x_start = int(input('Enter start x: '))
+        y_start = int(input('Enter starty y: '))
+        x_delta = int(input('Enter distance per move in x: '))
+        y_delta = int(input('Enter distance per move in y: '))
         x = x_start
         y = y_start
         while True:
+            
             for i in range(4):
                 # collect data poitns
                 pivot_direction = -1 + (2 * (i % 2)) 
                 start_heading = self.mag.get_heading()
-                count = 0
-                start_time = time()      
-                while count < self.frames_per_location:
+                self.count = 0
+                start_time = time() 
+                t = threading.Thread(target=self.pivot_worker, args=(self.PIVOT_SPEED, pivot_direction))
+                t.daemon = True
+                t.start()
+                while self.count < self.frames_per_location:
                     self.kob.move(speed=self.PIVOT_SPEED, radius=pivot_direction)
                     if time() - start_time > self.interval:
                         heading = self.mag.get_heading()
@@ -104,7 +114,7 @@ class capture():
                             cv2.imwrite(path2, img2)
                             write_line(self.wr, self.loc, x, y, mag_x=heading, mag_y=0.0, mag_z=0.0, img1=path1, img2=path2)
                             print('sample ', count, 'Heading: ', heading)
-                            count += 1
+                            self.count += 1
                             start_time = time()
                     f1 = self.cam1.grab()
                     f2 = self.cam2.grab()
