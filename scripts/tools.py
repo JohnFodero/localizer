@@ -52,14 +52,15 @@ def start_capture(file_name=None, file_path=None):
     f = open(file_path + file_name, 'wt')
     return f, csv.writer(f, delimiter=',')
 
-def write_line(writer=None, localizer=None, x=0.0, y=0.0, mag_x=0.0, mag_y=0.0, mag_z=0.0, img1='na', img2='na'):
-    if localizer is not None and writer is not None:
+def write_line(writer=None, localizer=None, x=0.0, y=0.0, mag_x=None, mag_y=0.0, mag_z=0.0, img1='na', img2='na'):
+    if localizer is not None and writer is not None and mag_x is not None:
         cells = localizer.wifi.get_ap_group('list')
         mod_cells = []
         for row in cells:
             mod_cells.append(row[0] + ' ' + str(row[1]))
         #writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, *mod_cells])
-        writer.writerow([x, y, mag_x, mag_y, mag_z, img1, img2, mod_cells[:]])
+        mag_val = mag_x.get_heading()
+        writer.writerow([x, y, mag_val, mag_y, mag_z, img1, img2, mod_cells[:]])
 
 def stop_capture(file_obj):
     file_obj.close()

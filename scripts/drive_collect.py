@@ -112,12 +112,14 @@ class capture():
                             img1 = rotate_about_center(img1, 180)
                             cv2.imwrite(path1, img1)
                             cv2.imwrite(path2, img2)
-                            write_line(self.wr, self.loc, x, y, mag_x=heading, mag_y=0.0, mag_z=0.0, img1=path1, img2=path2)
-                            print('sample ', count, 'Heading: ', heading)
+                            write_line(self.wr, self.loc, x, y, mag_x=self.mag, mag_y=0.0, mag_z=0.0, img1=path1, img2=path2)
+                            print('sample ', self.count, 'Heading: ', heading)
                             self.count += 1
                             start_time = time()
                     f1 = self.cam1.grab()
                     f2 = self.cam2.grab()
+                while t.isAlive():
+                    pass
                 print('Finished collecting, recentering...')
                 while abs(self.mag.get_heading() - start_heading) > 1:
                     self.kob.move(speed=max(self.PIVOT_SPEED-20, self.MIN_SPEED), radius=pivot_direction)
