@@ -10,6 +10,7 @@ import datetime
 import cv2
 import sys
 import threading
+import json
 
 class capture():
     DRIVE_TIME = 9.16
@@ -19,10 +20,10 @@ class capture():
     MIN_SPEED = 40
     def __init__(self):
         self.loc = localizer(jetson_wifi_scanner())
-
+        self.location = '4th Floor NEB'
+        self.file_name = location.replace(' ', '_') + '-' + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M') + '.json'
         self.cam1 = cv2.VideoCapture(1)
         self.cam2 = cv2.VideoCapture(2)
-        self.path='../datasets/images/'
         while not self.cam1.isOpened() and not self.cam2.isOpened():
             print('waiting for cameras to open...')
             sleep(1)
@@ -37,13 +38,11 @@ class capture():
         print('mapping started')
         '''
 
-        self.f, self.wr = start_capture()
-
         self.mag = magnetometer(port=1, address=0x1E, declination=(-5,53))
 
         self.frames_per_location = 20     # samples per location
         self.interval = 0.25               # seconds per sample
-    
+    '''
     def rotate_capture(self):
         while True:
             x = input("enter x location: ")
@@ -80,6 +79,12 @@ class capture():
             self.kob.move(speed, direction)
         print('Thread ended')
         return
+    '''
+    def save_data(self, data):
+        with open(self.file_name, 'w') as f:
+            json.dump(self.data, f)
+            print('Data saved')
+        return
     
     def drive_capture(self):
         x_start = int(input('Enter start x: '))
@@ -88,10 +93,12 @@ class capture():
         y_delta = int(input('Enter distance per move in y: '))
         x = x_start
         y = y_start
+        data = {}
+        data['location'] = self.location
+        data['datapoints'] = []
         while True:
-            
             for i in range(4):
-                # collect data poitns
+                # collect data points
                 pivot_direction = -1 + (2 * (i % 2)) 
                 start_heading = self.mag.get_heading()
                 self.count = 0
@@ -102,20 +109,28 @@ class capture():
                 while self.count < self.frames_per_location:
                     self.kob.move(speed=self.PIVOT_SPEED, radius=pivot_direction)
                     if time() - start_time > self.interval:
-                        heading = self.mag.get_heading()
                         name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')
                         path1 = self.path + name + '_cam1.jpg'
                         path2 = self.path + name + '_cam2.jpg'
                         s1, img1 = self.cam1.retrieve(f1)
                         s2, img2 = self.cam2.retrieve(f1)
+                        heading = self.mag.get_heading()
                         if s1 and s2:
                             img1 = rotate_about_center(img1, 180)
                             cv2.imwrite(path1, img1)
                             cv2.imwrite(path2, img2)
-                            write_line(self.wr, self.loc, x, y, mag_x=self.mag, mag_y=0.0, mag_z=0.0, img1=path1, img2=path2)
                             print('sample ', self.count, 'Heading: ', heading)
+                            data['datapoints'].append({})
+                            data['datapoints'][-1]['x'] = x
+                            data['datapoints'][-1]['y'] = y
+                            data['datapoints'][-1]['heading'] = heading
+                            data['datapoints'][-1]['img1'] = path1
+                            data['datapoints'][-1]['img2'] = path2
+                            data['datapoints'][-1]['access_points'] = self.loc.get_ap_group(ret_type='dict')
                             self.count += 1
                             start_time = time()
+                        else:
+                            print('Camera error - Retrying')
                     f1 = self.cam1.grab()
                     f2 = self.cam2.grab()
                 while t.isAlive():
@@ -133,12 +148,14 @@ class capture():
                 
                 x += x_delta
                 y += y_delta
-            input('Re-center the bot..\nPress any key to begin')
+            # write json to file as a backup
+            self.save_data(data)
+            input(Re-center the bot.\nPress any key to begin')
 
             
     def shutdown(self):
+        self.save_data()
         self.kob.deinitialize()
-        stop_capture(self.f)
         self.cam1.release()
         self.cam2.release()
         #m.close_display()
