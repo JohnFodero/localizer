@@ -80,7 +80,6 @@ class capture():
                 t.daemon = True
                 t.start()
                 while self.count < self.frames_per_location:
-                    self.kob.move(speed=self.PIVOT_SPEED, radius=pivot_direction)
                     if time() - start_time > self.interval:
                         name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')
                         path1 = self.image_path + '/' + name + '_cam1.jpg'
