@@ -85,7 +85,7 @@ class capture():
         return
     def save_data(self, data):
         with open(self.path + '/' + self.file_name, 'w') as f:
-            json.dump(self.data, f)
+            json.dump(self.data, f, sort_keys=True)
             print('Data saved')
         return
     

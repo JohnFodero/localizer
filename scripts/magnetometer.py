@@ -34,7 +34,7 @@ class magnetometer():
         self.get_xyz()
         # load claibration
         try:
-            with open('mag_calibration.p', 'rb') as f:
+            with open('./mag_calibrations/mag_calibration.p', 'rb') as f:
                 self.calibration = pickle.load(f)
                 print('Loaded calibration: ', self.calibration[0], self.calibration[1])
         except:
