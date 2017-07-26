@@ -38,7 +38,7 @@ class kobuki :
         for x in body:
             checksum ^= x
                 
-        packets = header+body+[checksum]
+        packets = header + body + [checksum]
         write_str = ''.join(map(chr, packets))
         self.serial.write(write_str.encode('latin-1'))
     
@@ -131,7 +131,10 @@ class kobuki :
             self.drive(self.thr,self.steer)
         # Stop robot and exit
         self.stop()
-        
+    def play_error_sound(self):
+        self.send([0x04, 0x01, 0x04])
+        return
+
 if __name__ == '__main__' :
     kob = kobuki('/dev/ttyUSB0')
     kob.initialize()

@@ -45,44 +45,14 @@ class capture():
         self.data = {}
         self.frames_per_location = 20     # samples per location
         self.interval = 0.25               # seconds per sample
-    '''
-    def rotate_capture(self):
-        while True:
-            x = input("enter x location: ")
-            y = input("enter y location: ")
-        #    x, y = m.get_location()
-            print('Collecting at :', x, y)
+        self.count = 0
 
-            count = 0
-            start_time = time()
-            while count < self.frames_per_location:
-                self.kob.drive(thr=1, steer=0)
-                if time() - start_time > self.interval:
-                    heading = self.mag.get_heading()
-                    name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')
-                    path1 = self.path + name + '_cam1.jpg'
-                    path2 = self.path + name + '_cam2.jpg'
-                    s1, img1 = self.cam1.retrieve(f1)
-                    s2, img2 = self.cam2.retrieve(f1)
-                    if s1 and s2:
-                        img1 = rotate_about_center(img1, 180)
-                        cv2.imwrite(path1, img1)
-                        cv2.imwrite(path2, img2)
-                        write_line(self.wr, self.loc, x, y, mag_x=heading, mag_y=0.0, mag_z=0.0, img1=path1, img2=path2)
-                        print('sample ', count, 'Heading: ', heading)
-                        count += 1
-                        start_time = time()
-                f1 = self.cam1.grab()
-                f2 = self.cam2.grab()
-
-            # stop kobuki
-            self.kob.stop()
-'''
     def pivot_worker(self, speed, direction):
         while self.count < self.frames_per_location:
             self.kob.move(speed, direction)
         print('Thread ended')
         return
+    
     def save_data(self, data):
         with open(self.path + '/' + self.file_name, 'w') as f:
             json.dump(self.data, f, sort_keys=True)
@@ -101,6 +71,7 @@ class capture():
         while True:
             for i in range(4):
                 # collect data points
+                # pivot_direction alternates between [0, 1] to change direction of rotation
                 pivot_direction = -1 + (2 * (i % 2)) 
                 start_heading = self.mag.get_heading()
                 self.count = 0
@@ -137,6 +108,7 @@ class capture():
                     f2 = self.cam2.grab()
                 while t.isAlive():
                     pass
+                self.kob.play_error_sound()
                 print('Finished collecting, recentering...')
                 while abs(self.mag.get_heading() - start_heading) > 1:
                     self.kob.move(speed=max(self.PIVOT_SPEED-20, self.MIN_SPEED), radius=pivot_direction)
