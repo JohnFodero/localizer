@@ -16,7 +16,7 @@ class capture():
     DRIVE_TIME = 9.16
     DRIVE_TIME_CAL = 1.83
     FORWARD_SPEED = 100
-    PIVOT_SPEED = 50
+    PIVOT_SPEED = 40
     MIN_SPEED = 40
     def __init__(self):
         self.scanner = jetson_wifi_scanner()
@@ -24,7 +24,7 @@ class capture():
         self.location = '4th Floor NEB'
         self.path = '../datasets'
         self.image_path = self.path + '/images'
-        self.file_name = self.location.replace(' ', '_') + '-' + datetime.datetime.now().strftime('%Y-%m-%d_%H:%M') + '.json'
+        self.file_name = self.location.replace(' ', '_') + '-' + datetime.datetime.now().strftime('%Y-%m-%d_%H_%M') + '.json'
         self.cam1 = cv2.VideoCapture(1)
         self.cam2 = cv2.VideoCapture(2)
         while not self.cam1.isOpened() and not self.cam2.isOpened():
@@ -43,13 +43,20 @@ class capture():
 
         self.mag = magnetometer(port=1, address=0x1E, declination=(-5,53))
         self.data = {}
-        self.frames_per_location = 20     # samples per location
+        self.frames_per_location = 30     # samples per location
         self.interval = 0.25               # seconds per sample
         self.count = 0
 
-    def pivot_worker(self, speed, direction):
-        while self.count < self.frames_per_location:
-            self.kob.move(speed, direction)
+    def pivot_worker(self):
+        pivot_direction = -1
+        for i in range(2):
+            start_time = time()
+            while time() - start_time < 25:
+                self.kob.move(self.PIVOT_SPEED, pivot_direction)
+            self.kob.stop()
+            pivot_direction *= -1
+            sleep(1)
+            
         print('Thread ended')
         return
     
@@ -71,17 +78,15 @@ class capture():
         while True:
             for i in range(4):
                 # collect data points
-                # pivot_direction alternates between [0, 1] to change direction of rotation
-                pivot_direction = -1 + (2 * (i % 2)) 
                 start_heading = self.mag.get_heading()
                 self.count = 0
-                start_time = time() 
-                t = threading.Thread(target=self.pivot_worker, args=(self.PIVOT_SPEED, pivot_direction))
+                t = threading.Thread(target=self.pivot_worker)
                 t.daemon = True
                 t.start()
+                start_time = time()
                 while self.count < self.frames_per_location:
                     if time() - start_time > self.interval:
-                        name = datetime.datetime.now().strftime('%Y-%m-%d_%H:%M:%S.%f')
+                        name = datetime.datetime.now().strftime('%Y-%m-%d_%H_%M_%S.%f')
                         path1 = self.image_path + '/' + name + '_cam1.jpg'
                         path2 = self.image_path + '/' + name + '_cam2.jpg'
                         s1, img1 = self.cam1.retrieve(f1)
@@ -108,10 +113,7 @@ class capture():
                 while t.isAlive():
                     pass
                 self.kob.play_error_sound()
-                print('Finished collecting, recentering...')
-                while abs(self.mag.get_heading() - start_heading) > 1:
-                    self.kob.move(speed=max(self.PIVOT_SPEED-20, self.MIN_SPEED), radius=pivot_direction)
-                self.kob.stop()
+                print('Finished collecting')
                 sleep(1)
                 start_time = time()
                 while time() - start_time < self.DRIVE_TIME + self.DRIVE_TIME_CAL:
@@ -140,6 +142,7 @@ def main():
     except KeyboardInterrupt:
         cap.shutdown()
         sys.exit()
+    cap.shutdown()
         
 if __name__ == '__main__':
     main()

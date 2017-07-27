@@ -3,6 +3,7 @@ from math import floor
 import numpy as np
 from time import sleep
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 # Map origin is top left corner
 
 DISPLAY_SCALE = 0.5
@@ -16,7 +17,8 @@ class mapping():
     def __init__(self, path_to_map_img, path_to_bitmap):
 
         # read map png file
-        self.map_img = cv2.imread(path_to_map_img, 1)
+        self.map_img = mpimg.imread(path_to_map_img)
+
         # height and width of map in pixels
         self.map_height_pixel, self.map_width_pixel = self.map_img.shape[:2]
         # height and width of the display
@@ -110,24 +112,27 @@ class mapping():
 
     # initialize the display
     def initialize_display(self):
-        cv2.namedWindow('map', cv2.WINDOW_NORMAL)
-        cv2.resizeWindow('map', self.map_width_display, self.map_height_display)
-        cv2.setMouseCallback("map", self.click_and_update)
+        #cv2.namedWindow('map', cv2.WINDOW_NORMAL)
+        #plt.figure(figsize=(100,100))
+        #cv2.resizeWindow('map', self.map_width_display, self.map_height_display)
+        #cv2.setMouseCallback("map", self.click_and_update)
         self.__update_display(0)
 
     # internal function to update display
     def __update_display(self, mode):
         # mode 0 = only show map
         if(mode == 0):
-            cv2.imshow('map', self.map_img)
+            plt.imshow(self.map_img)
+            plt.axis('off')
+            plt.show()
         # mode 1 = map + kobuki
         if(mode == 1):
-            cv2.imshow('map', self.map_img_kobuki)
+            plt.imshow(self.map_img_kobuki)
         # mode 2 = map + kobuki history
         if(mode == 2):
-            cv2.imshow('map', self.map_img_kobuki_history)
-
-        cv2.waitKey(50)
+            plt.imshow(self.map_img_kobuki_history, aspect='auto')
+            plt.axis('off')
+            plt.show()
     
     # internal function to draw the kobuki's circle
     def __draw_kobuki(self, x, y, color):
@@ -136,7 +141,19 @@ class mapping():
 
     # internal function to draw multiple kobukis
     def __draw_kobuki_history(self, x, y, color=(0,0,255)):
-        cv2.circle(self.map_img_kobuki_history, (x, y), self.kobuki_radius_local, color, -1)
+        new_color = (color[0] / 255., color[2] / 255., color[2] / 255.)
+        circle1 = plt.Circle((x, y), self.kobuki_radius_local, color=new_color)
+        fig = plt.gcf()
+        ax = plt.gca()
+        ax.add_artist(circle1)
+        return
+    
+    def draw_rect(self, x, y, color='green'):
+        rect = plt.Rectangle((x, y), 20, 20, fc=color)
+        fig = plt.gcf()
+        ax = plt.gca()
+        ax.add_artist(rect)
+        return
 
     # get the obstacle bitmap
     def get_obstacle_bitmap(self):
@@ -162,16 +179,16 @@ class mapping():
 
     # plot the history of kobuki's oath using a list of lists. Colors will be cycled through self.colors
     def plot_path(self, coords):
-        plt.imshow(self.map_img[...,::-1])
-        ax = plt.gca()
-        for i, group in enumerate(coords):
-            for j in group:
-                colors = self.colors[i % len(self.colors)]
-                new_colors = (colors[0]/255., colors[1]/255., colors[2]/255.)
-                circle = plt.Circle((j[0], j[1]), self.kobuki_radius_local, color=new_colors)
-                ax.add_artist(circle)
-        plt.axis('off')
-        plt.show()
+        c = 0
+        self.draw_rect(250, 1080) 
+        self.map_img_kobuki_history = self.map_img.copy()
+        for i in range(len(coords)):
+            for j in coords[i]:
+                self.__draw_kobuki_history(j[0], j[1] , self.colors[c])
+            c = c+1
+            if(c==len(self.colors)):
+                c = 0
+        self.__update_display(2)
 
     # clear display
     def remove_kobuki(self):
@@ -192,15 +209,16 @@ class mapping():
     # close display
     def close_display(self):
         #cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        #cv2.destroyAllWindows()
+        pass
 
 def main():
     M = mapping('maps/NEBfourthfloor.png', 'maps/obstacle_bitmap.bmp')
     M.initialize_display()
-    M.update_kobuki(200,200)
+    #M.update_kobuki(200,200)
     coords = [[(10,10), (20, 20), (30, 30)], [(40, 40), (50, 50)], [(60,60)], [(70,70)], [(80,80)], [(90,90)], [(100,100)], [(110,110)], [(120,120), (190, 190), (200, 200), (210, 210), (220, 220)], [(130,130)], [(140,140)], [(150,150)], [(160,160)], [(170,170)], [(180,10)]]
     M.plot_path(coords)
-    M.close_display()
+    #M.close_display()
 
 if __name__ == '__main__':
     main()
