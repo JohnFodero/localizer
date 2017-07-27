@@ -43,7 +43,7 @@ class capture():
 
         self.mag = magnetometer(port=1, address=0x1E, declination=(-5,53))
         self.data = {}
-        self.frames_per_location = 20     # samples per location
+        self.frames_per_location = 30     # samples per location
         self.interval = 0.25               # seconds per sample
         self.count = 0
 
