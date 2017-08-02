@@ -64,7 +64,9 @@ class localizer():
 
 def main():
     l = localizer()
-    l.make_profile('hallway_profile', length=30)
+    profile_name = input('Enter profile name ')
+    profile_length = int(input('Enter profile length'))
+    l.make_profile(profile_name, length=profile_length)
     print(l)
 
 if __name__ == '__main__':

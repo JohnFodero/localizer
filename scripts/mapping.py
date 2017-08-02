@@ -2,7 +2,7 @@ import cv2
 from math import floor
 import numpy as np
 from time import sleep
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 # Map origin is top left corner
 
 DISPLAY_SCALE = 0.5
@@ -40,7 +40,7 @@ class mapping():
         self.X = 0
         self.Y = 0
 
-	# position of robot in global coordinates
+    # position of robot in global coordinates
         self.X_global = self.X * self.x_scale
         self.Y_global = self.Y * self.y_scale
 

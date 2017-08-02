@@ -21,7 +21,7 @@ class capture():
     def __init__(self):
         self.scanner = jetson_wifi_scanner()
         self.loc = localizer(self.scanner)
-        self.location = '4th Floor NEB'
+        self.location = '5th Floor NEB'
         self.path = '../datasets'
         self.image_path = self.path + '/images'
         self.file_name = self.location.replace(' ', '_') + '-' + datetime.datetime.now().strftime('%Y-%m-%d_%H_%M') + '.json'
